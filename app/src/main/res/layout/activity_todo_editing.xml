@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent" android:layout_height="match_parent"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        tools:context=".TodoEditingActivity"
+        android:orientation="vertical">
+
+    <LinearLayout
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/linear_layout_todo_editing_start"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:weightSum="10"
+            android:id="@+id/linear_layout_todo_editing_btn">
+
+        <Button
+                android:text="취소"
+                android:layout_width="0dp"
+                android:layout_weight="5"
+                android:layout_height="wrap_content" android:id="@+id/btn_todo_editing_cancel"/>
+        <Button
+                android:text="저장"
+                android:layout_width="0dp"
+                android:layout_weight="5"
+                android:layout_height="wrap_content" android:id="@+id/btn_todo_editing_save"/>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/linear_layout_todo_editing_btn"
+            app:layout_constraintBottom_toTopOf="@id/linear_layout_todo_editing_end"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/linear_layout_todo_editing_start">
+
+        <TextView
+                android:text="시작"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:autoSizeTextType="uniform"/>
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:ems="10"
+                android:id="@+id/text_view_todo_editing_start_date"/>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/linear_layout_todo_editing_start"
+            app:layout_constraintBottom_toTopOf="@id/linear_layout_todo_editing_content"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/linear_layout_todo_editing_end">
+
+        <TextView
+                android:text="종료"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:autoSizeTextType="uniform"/>
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:ems="10"
+                android:id="@+id/text_view_todo_editing_end_date" />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/linear_layout_todo_editing_end"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/linear_layout_todo_editing_content">
+
+        <TextView
+                android:text="일정 내용"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:autoSizeTextType="uniform"/>
+
+        <EditText
+                android:layout_width="match_parent"
+                android:layout_height="350dp"
+                android:inputType="textMultiLine"
+                android:ems="10"
+                android:id="@+id/edit_text_todo_editing_content"/>
+
+    </LinearLayout>
+
+
+</android.support.constraint.ConstraintLayout>
