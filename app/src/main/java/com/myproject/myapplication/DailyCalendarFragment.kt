@@ -53,7 +53,6 @@ class DailyCalendarFragment : Fragment() {
                 if (!recyclerView.canScrollVertically(-1)) {
                     gregorianCalendar.time = dateList.first()
                     val disposable = Observable.range(0, 10)
-                        .observeOn(Schedulers.computation())
                         .map {
                             gregorianCalendar.add(GregorianCalendar.DATE, -1)
                             Date(gregorianCalendar.time.time)
@@ -64,7 +63,6 @@ class DailyCalendarFragment : Fragment() {
                 } else if (!recyclerView.canScrollVertically(1)) {
                     gregorianCalendar.time = dateList.last()
                     val disposable = Observable.range(0, 10)
-                        .observeOn(Schedulers.computation())
                         .map {
                             gregorianCalendar.add(GregorianCalendar.DATE, 1)
                             Date(gregorianCalendar.time.time)
