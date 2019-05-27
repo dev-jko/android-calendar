@@ -25,11 +25,24 @@ class DailyAdapter(
 ) :
     RecyclerView.Adapter<DailyAdapter.ViewHolder>() {
 
+    companion object {
+        const val DATE = 0
+        const val TODO = 1
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val context = parent.context
-        val inflater: LayoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val view = inflater.inflate(R.layout.recyclerview_item_daily, parent, false)
-        return ViewHolder(view)
+        when (viewType) {
+            DATE -> {
+                val inflater: LayoutInflater =
+                    context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+                val view = inflater.inflate(R.layout.recyclerview_item_daily, parent, false)
+                return ViewHolder(view)
+            }
+            TODO -> {
+
+            }
+        }
     }
 
     override fun getItemCount(): Int {
