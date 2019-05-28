@@ -12,15 +12,13 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import com.myproject.myapplication.CalendarData
-import com.myproject.myapplication.MainActivity
 import com.myproject.myapplication.R
 import com.myproject.myapplication.TodoEditingActivity
 import kotlinx.android.synthetic.main.recyclerview_item_daily.view.*
 import java.sql.Date
 
 class DailyAdapter(
-    private val dateList: ArrayList<Date>,
-    private val todoList: ArrayList<CalendarData>,
+    private val dataList: ArrayList<Item>,
     private val context: Context
 ) :
     RecyclerView.Adapter<DailyAdapter.ViewHolder>() {
@@ -32,21 +30,26 @@ class DailyAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val context = parent.context
+        val inflater: LayoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        val view: View
         when (viewType) {
             DATE -> {
-                val inflater: LayoutInflater =
-                    context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-                val view = inflater.inflate(R.layout.recyclerview_item_daily, parent, false)
+                view = inflater.inflate(R.layout.recyclerview_item_daily, parent, false)
                 return ViewHolder(view)
             }
-            TODO -> {
-
+            else -> {
+                view = inflater.inflate(R.layout.recyclerview_item_daily_todo, parent, false)
             }
         }
+        return ViewHolder(view)
     }
 
     override fun getItemCount(): Int {
         return dateList.size
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -77,5 +80,6 @@ class DailyAdapter(
         val todoAddBtn: Button = itemView.btn_daily_todo_add
     }
 
+    class Item(val type: Int, val content: Any, val invisibleChildren: ArrayList<CalendarData>? = null)
 
 }

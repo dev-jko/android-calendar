@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import android.widget.RelativeLayout
 import com.myproject.myapplication.myrecyclerview.DailyAdapter
 import io.reactivex.Observable
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_daily_calendar.*
 import java.sql.Date
 import java.util.*
@@ -20,8 +19,7 @@ import kotlin.collections.ArrayList
 
 class DailyCalendarFragment : Fragment() {
 
-    lateinit var dateList: ArrayList<Date>
-    lateinit var todoList: ArrayList<CalendarData>
+    val dataList = ArrayList<DailyAdapter.Item>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -33,19 +31,33 @@ class DailyCalendarFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        todoList = getData() as ArrayList<CalendarData>
+
+        val todoList = getData() as ArrayList<CalendarData>
         val gregorianCalendar = GregorianCalendar(TimeZone.getTimeZone("Asia/Seoul"))
         gregorianCalendar.add(GregorianCalendar.DATE, -3)
-        dateList = Observable.range(0, 50)
+        Observable.range(0, 50)
             .map {
                 gregorianCalendar.add(GregorianCalendar.DATE, 1)
-                Date(gregorianCalendar.time.time)
+                val date = Date(gregorianCalendar.time.time)
+                DailyAdapter.Item(DailyAdapter.DATE,
+                    date,
+                    todoList.filter{
+                        (it.startDate.time <= date.time) && (dateList[position].time < it.endDate.time + 86400000L)
+                    } as ArrayList<CalendarData>
+                )
+
             }
-            .toList().blockingGet() as ArrayList<Date>
 
         recycler_daily.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         recycler_daily.layoutManager = LinearLayoutManager(activity)
-        val adapter = DailyAdapter(dateList, todoList, context!!)
+
+
+        todoList.filter {
+            (it.startDate.time <= dateList[position].time) && (dateList[position].time < it.endDate.time + 86400000L)
+        } as ArrayList<CalendarData>
+
+
+        val adapter = DailyAdapter(list, context!!)
         recycler_daily.adapter = adapter
         recycler_daily.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
