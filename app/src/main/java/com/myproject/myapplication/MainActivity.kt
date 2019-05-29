@@ -7,7 +7,11 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentStatePagerAdapter
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.View
+import com.myproject.myapplication.fragments.DailyCalendarFragment
+import com.myproject.myapplication.fragments.MonthlyCalendarFragment
+import com.myproject.myapplication.fragments.WeeklyCalendarFragment
 import kotlinx.android.synthetic.main.activity_main.*
 import java.sql.Date
 
@@ -60,16 +64,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
+        Log.d("MainActivity", "11111111111111111122222222222222222  ${data.toString()}")
         if (requestCode == resultCode){
-            val cd = CalendarData(
+            val calendarData = CalendarData(
                 data!!.getIntExtra("id", 0),
                 data.getSerializableExtra("startDate") as Date,
                 data.getSerializableExtra("endDate") as Date,
                 data.getStringExtra("content")
             )
-            (supportFragmentManager.findFragmentByTag("1") as DailyCalendarFragment).updateRecycler(cd)
+            (supportFragmentManager.findFragmentByTag("1") as DailyCalendarFragment).updateList(calendarData)
+
         }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 }

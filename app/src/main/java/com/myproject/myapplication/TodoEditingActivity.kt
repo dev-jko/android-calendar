@@ -6,9 +6,9 @@ import android.content.ContentValues
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.widget.DatePicker
 import android.widget.Toast
+import com.myproject.myapplication.fragments.DatePickerDialogFragment
 import kotlinx.android.synthetic.main.activity_todo_editing.*
 import java.sql.Date
 import java.util.*
@@ -49,9 +49,6 @@ class TodoEditingActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListe
             dialog.show(this.supportFragmentManager, "endDatePicker")
         }
 
-
-        // TODO 취소 버튼, 저장 버튼 구현
-
         btn_todo_editing_save.setOnClickListener {
             val db = DataBaseOpenHelper(this).writableDatabase
             val values = ContentValues().apply {
@@ -72,6 +69,10 @@ class TodoEditingActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListe
                 setResult(Activity.RESULT_OK, intent)
                 finish()
             }
+        }
+
+        btn_todo_editing_cancel.setOnClickListener {
+            onBackPressed()
         }
 
 
