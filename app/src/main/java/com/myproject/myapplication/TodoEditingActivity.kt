@@ -6,6 +6,7 @@ import android.content.ContentValues
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.widget.DatePicker
 import android.widget.Toast
 import com.myproject.myapplication.fragments.DatePickerDialogFragment
@@ -66,7 +67,7 @@ class TodoEditingActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListe
                 intent.putExtra("startDate", startDate)
                 intent.putExtra("endDate", endDate)
                 intent.putExtra("content", edit_text_todo_editing_content.text.toString())
-                setResult(Activity.RESULT_OK, intent)
+                setResult(50, intent)
                 finish()
             }
         }

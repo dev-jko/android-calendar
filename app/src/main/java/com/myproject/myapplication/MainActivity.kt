@@ -1,5 +1,6 @@
 package com.myproject.myapplication
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -9,6 +10,7 @@ import android.support.v4.app.FragmentStatePagerAdapter
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import com.myproject.myapplication.fragments.DailyCalendarFragment
 import com.myproject.myapplication.fragments.MonthlyCalendarFragment
 import com.myproject.myapplication.fragments.WeeklyCalendarFragment
@@ -63,18 +65,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        Log.d("MainActivity", "11111111111111111122222222222222222  ${data.toString()}")
-        if (requestCode == resultCode){
-            val calendarData = CalendarData(
-                data!!.getIntExtra("id", 0),
-                data.getSerializableExtra("startDate") as Date,
-                data.getSerializableExtra("endDate") as Date,
-                data.getStringExtra("content")
-            )
-            (supportFragmentManager.findFragmentByTag("1") as DailyCalendarFragment).updateList(calendarData)
-
-        }
-        super.onActivityResult(requestCode, resultCode, data)
-    }
 }
