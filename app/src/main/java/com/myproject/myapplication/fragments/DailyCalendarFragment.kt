@@ -16,6 +16,9 @@ import android.widget.RelativeLayout
 import com.myproject.myapplication.*
 import com.myproject.myapplication.myrecyclerview.DailyAdapter
 import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposables
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_daily_calendar.*
 import java.sql.Date
@@ -26,6 +29,7 @@ import kotlin.collections.ArrayList
 class DailyCalendarFragment : Fragment() {
 
     val dataList = ArrayList<DailyAdapter.Item>()
+    val disposables = CompositeDisposable()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,7 +44,7 @@ class DailyCalendarFragment : Fragment() {
         val todoList = getData() as ArrayList<CalendarData>
         val gregorianCalendar = GregorianCalendar(TimeZone.getTimeZone("Asia/Seoul"))
         gregorianCalendar.add(GregorianCalendar.DATE, -3)
-        val disposable = Observable.range(0, 50)
+        Observable.range(0, 20)
             .map {
                 gregorianCalendar.add(GregorianCalendar.DATE, 1)
                 val date = Date(gregorianCalendar.time.time)
@@ -53,7 +57,7 @@ class DailyCalendarFragment : Fragment() {
                 { dataList.add(it) },
                 { it.printStackTrace() },
                 { Log.d("DailyCalendarFragment", "create list completed") }
-            )
+            ).apply { disposables.add(this) }
 
         recycler_daily.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         recycler_daily.layoutManager = LinearLayoutManager(activity)
@@ -74,9 +78,11 @@ class DailyCalendarFragment : Fragment() {
                                     (it.startDate.time <= date.time) && (date.time < it.endDate.time + 86400000L)
                                 } as ArrayList<CalendarData>)
                         }.subscribeOn(Schedulers.computation())
-                        .subscribe { dataList.add(0, it) }
-                    recyclerView.adapter?.notifyDataSetChanged()
-                    tempDisposable.dispose()
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe {
+                            dataList.add(0, it)
+                            recyclerView.adapter!!.notifyItemInserted(0)
+                        }.apply { disposables.add(this) }
                 } else if (!recyclerView.canScrollVertically(1)) {
                     gregorianCalendar.time = dataList.findLast { it.type == DailyAdapter.DATE }!!.content as Date
                     val tempDisposable = Observable.range(0, 10)
@@ -87,14 +93,14 @@ class DailyCalendarFragment : Fragment() {
                                 todoList.filter {
                                     (it.startDate.time <= date.time) && (date.time < it.endDate.time + 86400000L)
                                 } as ArrayList<CalendarData>)
-                        }.subscribe { dataList.add(it) }
-                    recyclerView.adapter?.notifyDataSetChanged()
-                    tempDisposable.dispose()
+                        }.subscribe {
+                            dataList.add(it)
+                            recyclerView.adapter!!.notifyItemInserted(dataList.size - 1)
+                        }.apply { disposables.add(this) }
                 }
             }
         })
 
-//        disposable.dispose()
     }
 
     fun getData(): List<CalendarData> {
@@ -146,11 +152,11 @@ class DailyCalendarFragment : Fragment() {
 
 
     fun insertList(calendarData: CalendarData) {
-        val indexes =
+        val indices =
             dataList.filter { it.type == DailyAdapter.DATE && (it.content as Date).time >= calendarData.startDate.time && (it.content).time < calendarData.endDate.time + 86400000L }
                 .map { dataList.indexOf(it) }
         var count = 0
-        indexes.forEach {
+        indices.forEach {
             if (dataList[it + count].invisibleChildren!!.size == 0) {
                 var index = it + count + 1
                 while (dataList[index].type == DailyAdapter.TODO) {
@@ -168,17 +174,23 @@ class DailyCalendarFragment : Fragment() {
     fun deleteList(id: Long) {
         dataList.forEach {
             if (it.type == DailyAdapter.DATE) {
-                val rm = it.invisibleChildren!!.find {calendarData -> calendarData.id == id }
-                if(rm != null) it.invisibleChildren.remove(rm)
+                val rm = it.invisibleChildren!!.find { calendarData -> calendarData.id == id }
+                if (rm != null) it.invisibleChildren.remove(rm)
             }
         }
-        // TODO  리스트 삭제
-//        if ((it.content as CalendarData).id == id) {
-//            return true
-//            dataList.remove(it)
-//        }
-
-        recycler_daily.adapter!!.notifyDataSetChanged()
+        val indices = dataList.filter {
+            it.type == DailyAdapter.TODO && (it.content as CalendarData).id == id
+        }.map { dataList.indexOf(it) }
+        var count = 0
+        indices.forEach {
+            dataList.removeAt(it - count)
+            recycler_daily.adapter!!.notifyItemRemoved(it - count)
+            count++
+        }
     }
 
+    override fun onDestroyView() {
+        disposables.clear()
+        super.onDestroyView()
+    }
 }
