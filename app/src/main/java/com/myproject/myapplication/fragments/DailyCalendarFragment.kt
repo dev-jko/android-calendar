@@ -2,6 +2,7 @@ package com.myproject.myapplication.fragments
 
 import android.app.Activity
 import android.content.Intent
+import android.database.Cursor
 import android.os.Bundle
 import android.support.annotation.MainThread
 import android.support.v4.app.Fragment
@@ -15,6 +16,7 @@ import android.view.ViewGroup
 import android.widget.RelativeLayout
 import com.myproject.myapplication.*
 import com.myproject.myapplication.myrecyclerview.DailyAdapter
+import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -48,10 +50,13 @@ class DailyCalendarFragment : Fragment() {
             .map {
                 gregorianCalendar.add(GregorianCalendar.DATE, 1)
                 val date = Date(gregorianCalendar.time.time)
-                DailyAdapter.Item(DailyAdapter.DATE, date,
+                DailyAdapter.Item(
+                    DailyAdapter.DATE,
+                    date,
                     todoList.filter {
                         (it.startDate.time <= date.time) && (date.time < it.endDate.time + 86400000L)
-                    } as ArrayList<CalendarData>)
+                    } as ArrayList<CalendarData>
+                )
             }.subscribeOn(Schedulers.computation())
             .subscribe(
                 { dataList.add(it) },
@@ -68,8 +73,8 @@ class DailyCalendarFragment : Fragment() {
                 super.onScrollStateChanged(recyclerView, newState)
                 val todoList = getData()
                 if (!recyclerView.canScrollVertically(-1)) {
-                    gregorianCalendar.time = dataList.first().content as Date
-                    val tempDisposable = Observable.range(0, 10)
+                    gregorianCalendar.time = dataList[0].content as Date
+                    Observable.range(0, 10)
                         .map {
                             gregorianCalendar.add(GregorianCalendar.DATE, -1)
                             val date = Date(gregorianCalendar.time.time)
@@ -85,7 +90,7 @@ class DailyCalendarFragment : Fragment() {
                         }.apply { disposables.add(this) }
                 } else if (!recyclerView.canScrollVertically(1)) {
                     gregorianCalendar.time = dataList.findLast { it.type == DailyAdapter.DATE }!!.content as Date
-                    val tempDisposable = Observable.range(0, 10)
+                    Observable.range(0, 10)
                         .map {
                             gregorianCalendar.add(GregorianCalendar.DATE, 1)
                             val date = Date(gregorianCalendar.time.time)
@@ -106,26 +111,35 @@ class DailyCalendarFragment : Fragment() {
     fun getData(): List<CalendarData> {
         val arrayList = ArrayList<CalendarData>()
         val db = (activity as MainActivity).dbHelper.readableDatabase
-        val cursor = db.query(
-            CalendarDBContract.TABLE_NAME,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-        )
-
-        while (cursor.moveToNext()) {
-            val temp = CalendarData(
-                cursor.getLong(0),
-                Date(cursor.getLong(1)),
-                Date(cursor.getLong(2)),
-                cursor.getString(3)
+        var cursor : Cursor? = null
+        Flowable.just(
+            db.query(
+                CalendarDBContract.TABLE_NAME,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
             )
-            arrayList.add(temp)
-        }
-        cursor.close()
+        ).map{
+            cursor = it
+            it
+        }.filter { it.moveToNext() }
+            .map {
+                CalendarData(
+                    it.getLong(0),
+                    Date(it.getLong(1)),
+                    Date(it.getLong(2)),
+                    it.getString(3)
+                )
+            }.doFinally { cursor?.close() }
+            .subscribeOn(Schedulers.io())
+            .subscribe(
+                { arrayList.add(it) },
+                { it.printStackTrace() },
+                { }
+            ).apply { disposables.add(this) }
         return arrayList.toMutableList()
     }
 
