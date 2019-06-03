@@ -30,8 +30,13 @@ import kotlin.collections.ArrayList
 
 class DailyCalendarFragment : Fragment() {
 
+    companion object {
+        private val TAG: String? = DailyCalendarFragment::class.simpleName
+    }
+
     val dataList = ArrayList<DailyAdapter.Item>()
     val disposables = CompositeDisposable()
+    val dateCreator = DateCreator()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,25 +49,19 @@ class DailyCalendarFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
 
         val todoList = getData() as ArrayList<CalendarData>
-        val gregorianCalendar = GregorianCalendar(TimeZone.getTimeZone("Asia/Seoul"))
-        gregorianCalendar.add(GregorianCalendar.DATE, -3)
-        Observable.range(0, 20)
-            .map {
-                gregorianCalendar.add(GregorianCalendar.DATE, 1)
-                val date = Date(gregorianCalendar.time.time)
-                DailyAdapter.Item(
-                    DailyAdapter.DATE,
-                    date,
-                    todoList.filter {
-                        (it.startDate.time <= date.time) && (date.time < it.endDate.time + 86400000L)
-                    } as ArrayList<CalendarData>
+
+        disposables.add(
+            dateCreator.createDate(15, -3, todoList)
+                .doOnDispose { Log.d(TAG, "disposed!!!!") }
+                .subscribe(
+                    { dataList.add(it) },
+                    { it.printStackTrace() },
+                    { Log.d(TAG, "completed") }
                 )
-            }.subscribeOn(Schedulers.computation())
-            .subscribe(
-                { dataList.add(it) },
-                { it.printStackTrace() },
-                { Log.d("DailyCalendarFragment", "create list completed") }
-            ).apply { disposables.add(this) }
+        )
+
+
+        val gregorianCalendar = GregorianCalendar(TimeZone.getTimeZone("Asia/Seoul"))
 
         recycler_daily.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         recycler_daily.layoutManager = LinearLayoutManager(activity)
@@ -111,7 +110,7 @@ class DailyCalendarFragment : Fragment() {
     fun getData(): List<CalendarData> {
         val arrayList = ArrayList<CalendarData>()
         val db = (activity as MainActivity).dbHelper.readableDatabase
-        var cursor : Cursor? = null
+        var cursor: Cursor? = null
         Flowable.just(
             db.query(
                 CalendarDBContract.TABLE_NAME,
@@ -122,7 +121,7 @@ class DailyCalendarFragment : Fragment() {
                 null,
                 null
             )
-        ).map{
+        ).map {
             cursor = it
             it
         }.filter { it.moveToNext() }
