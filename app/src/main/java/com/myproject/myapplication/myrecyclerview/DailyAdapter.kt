@@ -21,8 +21,7 @@ import java.sql.Date
 class DailyAdapter(
     private val dataList: ArrayList<Item>,
     private val fragment: Fragment
-) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         const val DATE = 0
@@ -37,7 +36,7 @@ class DailyAdapter(
             view = inflater.inflate(R.layout.recyclerview_item_daily, parent, false)
             DateViewHolder(view)
         } else {
-            view = inflater.inflate(R.layout.recyclerview_item_daily_todo, null, false)
+            view = inflater.inflate(R.layout.recyclerview_item_daily_todo, parent, false)
             TodoViewHolder(view)
         }
     }
@@ -82,10 +81,10 @@ class DailyAdapter(
             val todoHolder = holder as TodoViewHolder
             todoHolder.todoTextView.text = (item.content as CalendarData).content
             todoHolder.todoDeleteBtn.setOnClickListener {
-                if ((fragment as DailyCalendarFragment).deleteData(item.content.id) == 1){
+                if ((fragment as DailyCalendarFragment).deleteData(item.content.id) == 1) {
                     fragment.deleteList(item.content.id)
                     Toast.makeText(fragment.context, "삭제 완료", Toast.LENGTH_SHORT).show()
-                }else{
+                } else {
                     Toast.makeText(fragment.context, "삭제 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
                 }
             }

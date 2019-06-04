@@ -25,6 +25,7 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_daily_calendar.*
 import java.sql.Date
 import java.util.*
+import java.util.Calendar.DATE
 import kotlin.collections.ArrayList
 
 
@@ -36,7 +37,7 @@ class DailyCalendarFragment : Fragment() {
 
     val dataList = ArrayList<DailyAdapter.Item>()
     val disposables = CompositeDisposable()
-    val dateCreator = DateCreator()
+    private val dateCreator = DateCreator()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -50,61 +51,42 @@ class DailyCalendarFragment : Fragment() {
 
         val todoList = getData() as ArrayList<CalendarData>
 
-        disposables.add(
-            dateCreator.createDate(15, -3, todoList)
-                .doOnDispose { Log.d(TAG, "disposed!!!!") }
-                .subscribe(
-                    { dataList.add(it) },
-                    { it.printStackTrace() },
-                    { Log.d(TAG, "completed") }
-                )
-        )
-
-
-        val gregorianCalendar = GregorianCalendar(TimeZone.getTimeZone("Asia/Seoul"))
+        dateCreator.createDate(15, -3, todoList)
+            .subscribe { dataList.add(it) }
+            .apply { }
 
         recycler_daily.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         recycler_daily.layoutManager = LinearLayoutManager(activity)
         val adapter = DailyAdapter(dataList, this)
         recycler_daily.adapter = adapter
+
         recycler_daily.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
                 val todoList = getData()
+
                 if (!recyclerView.canScrollVertically(-1)) {
-                    gregorianCalendar.time = dataList[0].content as Date
-                    Observable.range(0, 10)
-                        .map {
-                            gregorianCalendar.add(GregorianCalendar.DATE, -1)
-                            val date = Date(gregorianCalendar.time.time)
-                            DailyAdapter.Item(DailyAdapter.DATE, date,
-                                todoList.filter {
-                                    (it.startDate.time <= date.time) && (date.time < it.endDate.time + 86400000L)
-                                } as ArrayList<CalendarData>)
-                        }.subscribeOn(Schedulers.computation())
+                    var count = 0
+                    dateCreator.createDate(10, -10, todoList, dataList[0].content as Date)
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe {
-                            dataList.add(0, it)
-                            recyclerView.adapter!!.notifyItemInserted(0)
+                            dataList.add(count, it)
+                            recyclerView.adapter!!.notifyItemInserted(count++)
                         }.apply { disposables.add(this) }
                 } else if (!recyclerView.canScrollVertically(1)) {
-                    gregorianCalendar.time = dataList.findLast { it.type == DailyAdapter.DATE }!!.content as Date
-                    Observable.range(0, 10)
-                        .map {
-                            gregorianCalendar.add(GregorianCalendar.DATE, 1)
-                            val date = Date(gregorianCalendar.time.time)
-                            DailyAdapter.Item(DailyAdapter.DATE, date,
-                                todoList.filter {
-                                    (it.startDate.time <= date.time) && (date.time < it.endDate.time + 86400000L)
-                                } as ArrayList<CalendarData>)
-                        }.subscribe {
+                    dateCreator.createDate(
+                        10,
+                        1,
+                        todoList,
+                        dataList.findLast { it.type == DailyAdapter.DATE }!!.content as Date
+                    ).observeOn(AndroidSchedulers.mainThread())
+                        .subscribe {
                             dataList.add(it)
                             recyclerView.adapter!!.notifyItemInserted(dataList.size - 1)
                         }.apply { disposables.add(this) }
                 }
             }
         })
-
     }
 
     fun getData(): List<CalendarData> {
