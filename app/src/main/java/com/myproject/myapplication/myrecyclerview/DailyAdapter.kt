@@ -91,6 +91,11 @@ class DailyAdapter(
         }
     }
 
+    fun addItem(item:Item, position:Int){
+        dataList.add(position, item)
+        notifyItemInserted(position)
+    }
+
     class DateViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val dateTextView: TextView = itemView.daily_item_date_text_view
         val todoAddBtn: Button = itemView.btn_daily_todo_add

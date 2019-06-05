@@ -2,6 +2,7 @@ package com.myproject.myapplication
 
 import android.util.Log
 import com.myproject.myapplication.myrecyclerview.DailyAdapter
+import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import java.sql.Date
@@ -10,12 +11,12 @@ import kotlin.collections.ArrayList
 
 class DateCreator {
 
-    fun createDate(
+    fun createDateFlowable(
         size: Int,
         offset: Int,
         todoList: List<CalendarData> = List(0) { CalendarData(0, Date(0), Date(0), "") },
         startDate: Date? = null
-    ): Observable<DailyAdapter.Item> {
+    ): Flowable<DailyAdapter.Item> {
         val gregorianCalendar = GregorianCalendar()
         if (startDate == null) {
             gregorianCalendar.add(Calendar.HOUR_OF_DAY, -gregorianCalendar.get(Calendar.HOUR_OF_DAY))
@@ -26,7 +27,7 @@ class DateCreator {
             gregorianCalendar.time = startDate
         }
         gregorianCalendar.add(Calendar.DATE, offset - 1)
-        return Observable.range(0, size)
+        return Flowable.range(0, size)
             .map {
                 gregorianCalendar.add(GregorianCalendar.DATE, 1)
                 val date = Date(gregorianCalendar.time.time)

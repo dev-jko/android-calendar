@@ -50,9 +50,9 @@ class DailyCalendarFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        val todoList = getData()
+        val todoList = getDataFlowable().toList()
 
-        dateCreator.createDate(15, -3, todoList)
+        dateCreator.createDateFlowable(15, -3, todoList)
             .subscribe { dataList.add(it) }
             .apply { disposables.add(this) }
 
@@ -90,11 +90,9 @@ class DailyCalendarFragment : Fragment() {
         })
     }
 
-    fun getData(): List<CalendarData> {
-        val arrayList = ArrayList<CalendarData>()
+    fun getDataFlowable(): Flowable<CalendarData> {
         val db = (activity as MainActivity).dbHelper.readableDatabase
-        var cursor: Cursor? = null
-        Flowable.just(
+        return Flowable.just(
             db.query(
                 CalendarDBContract.TABLE_NAME,
                 null,
@@ -104,10 +102,8 @@ class DailyCalendarFragment : Fragment() {
                 null,
                 null
             )
-        ).map {
-            cursor = it
-            it
-        }.filter { it.moveToNext() }
+        ).filter { it.moveToNext() }
+            .doAfterNext { if (it.isLast) it.close() }
             .map {
                 CalendarData(
                     it.getLong(0),
@@ -116,18 +112,6 @@ class DailyCalendarFragment : Fragment() {
                     it.getString(3)
                 )
             }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { arrayList.add(it) },
-                {
-                    it.printStackTrace()
-                    cursor?.close()
-                },
-                {
-                    cursor?.close()
-                }
-            ).apply { disposables.add(this) }
-        return arrayList.toList()
     }
 
     fun deleteData(id: Long): Int {
