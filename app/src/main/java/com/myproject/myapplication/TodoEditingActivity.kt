@@ -1,6 +1,5 @@
 package com.myproject.myapplication
 
-import android.app.Activity
 import android.app.DatePickerDialog
 import android.content.ContentValues
 import android.content.Intent
@@ -59,15 +58,16 @@ class TodoEditingActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListe
             }
             val result = db.insert(CalendarDBContract.TABLE_NAME, null, values)
             if (result == -1L) {
-                Toast.makeText(this, "오류가 발생했습니다. 다시 저장해주세요.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "오류가 발생했습니다. 다시 저장해주세요.", Toast.LENGTH_LONG).show()
             } else {
-                Toast.makeText(this, "일정이 저장되었습니다.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "일정이 저장되었습니다.", Toast.LENGTH_LONG).show()
                 val intent = Intent()
                 intent.putExtra("id", result)
                 intent.putExtra("startDate", startDate)
                 intent.putExtra("endDate", endDate)
                 intent.putExtra("content", edit_text_todo_editing_content.text.toString())
                 setResult(50, intent)
+                db.close()
                 finish()
             }
         }

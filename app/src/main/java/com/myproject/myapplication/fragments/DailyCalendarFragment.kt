@@ -43,17 +43,18 @@ class DailyCalendarFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_daily_calendar, container, false) as RelativeLayout
+        return inflater.inflate(R.layout.fragment_daily_calendar, container, false)
+//        return inflater.inflate(R.layout.fragment_daily_calendar, container, false) as RelativeLayout
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        val todoList = getData() as ArrayList<CalendarData>
+        val todoList = getData()
 
         dateCreator.createDate(15, -3, todoList)
             .subscribe { dataList.add(it) }
-            .apply { }
+            .apply { disposables.add(this) }
 
         recycler_daily.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         recycler_daily.layoutManager = LinearLayoutManager(activity)
@@ -114,14 +115,19 @@ class DailyCalendarFragment : Fragment() {
                     Date(it.getLong(2)),
                     it.getString(3)
                 )
-            }.doFinally { cursor?.close() }
-            .subscribeOn(Schedulers.io())
+            }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { arrayList.add(it) },
-                { it.printStackTrace() },
-                { }
+                {
+                    it.printStackTrace()
+                    cursor?.close()
+                },
+                {
+                    cursor?.close()
+                }
             ).apply { disposables.add(this) }
-        return arrayList.toMutableList()
+        return arrayList.toList()
     }
 
     fun deleteData(id: Long): Int {

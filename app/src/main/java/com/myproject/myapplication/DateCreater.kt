@@ -36,7 +36,7 @@ class DateCreator {
 
                     // TODO 날짜 시간 맞추기
                     todoList.filter {
-                        (it.startDate.time >= date.time) && (date.time + 86400000L > it.endDate.time)
+                        !((it.startDate.time >= date.time + 86400000L) || (date.time > it.endDate.time))
                     } as ArrayList<CalendarData>
                 )
             }.subscribeOn(Schedulers.computation())
