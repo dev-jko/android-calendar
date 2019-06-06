@@ -1,10 +1,7 @@
 package com.myproject.myapplication.fragments
 
-import android.app.Activity
 import android.content.Intent
-import android.database.Cursor
 import android.os.Bundle
-import android.support.annotation.MainThread
 import android.support.v4.app.Fragment
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
@@ -17,16 +14,12 @@ import android.widget.RelativeLayout
 import com.myproject.myapplication.*
 import com.myproject.myapplication.myrecyclerview.DailyAdapter
 import io.reactivex.Flowable
-import io.reactivex.Observable
+import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposables
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_daily_calendar.*
 import java.sql.Date
-import java.util.*
-import java.util.Calendar.DATE
-import kotlin.collections.ArrayList
 
 
 class DailyCalendarFragment : Fragment() {
@@ -35,7 +28,7 @@ class DailyCalendarFragment : Fragment() {
         private val TAG: String? = DailyCalendarFragment::class.simpleName
     }
 
-    val dataList = ArrayList<DailyAdapter.Item>()
+    lateinit var adapter: DailyAdapter
     val disposables = CompositeDisposable()
     private val dateCreator = DateCreator()
 
@@ -43,47 +36,56 @@ class DailyCalendarFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_daily_calendar, container, false)
-//        return inflater.inflate(R.layout.fragment_daily_calendar, container, false) as RelativeLayout
+        return inflater.inflate(R.layout.fragment_daily_calendar, container, false) as RelativeLayout
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        val todoList = getDataFlowable().toList()
-
+        val todoList = getDataFlowable().toList().blockingGet()
+        val dataList = ArrayList<DailyAdapter.Item>()
         dateCreator.createDateFlowable(15, -3, todoList)
             .subscribe { dataList.add(it) }
             .apply { disposables.add(this) }
 
         recycler_daily.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         recycler_daily.layoutManager = LinearLayoutManager(activity)
-        val adapter = DailyAdapter(dataList, this)
+        adapter = DailyAdapter(dataList, this)
         recycler_daily.adapter = adapter
+
+
+
 
         recycler_daily.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
-                val todoList = getData()
 
                 if (!recyclerView.canScrollVertically(-1)) {
                     var count = 0
-                    dateCreator.createDate(10, -10, todoList, dataList[0].content as Date)
+                    val todoList = getDataFlowable().toList().blockingGet()
+
+                    Log.d(TAG, "$todoList, ${todoList.size}")
+
+                    dateCreator.createDateFlowable(10, -10, todoList, adapter.dataList[0].content as Date)
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe {
-                            dataList.add(count, it)
-                            recyclerView.adapter!!.notifyItemInserted(count++)
+                            adapter.addItem(it, count++)
                         }.apply { disposables.add(this) }
                 } else if (!recyclerView.canScrollVertically(1)) {
-                    dateCreator.createDate(
+                    val todoList = getDataFlowable().toList().blockingGet()
+
+                    Log.d(TAG, "$todoList, ${todoList.size}")
+
+                    // TODO 스크롤을 빨리할 경우, 이벤트가 여러번 실행되어 중복된 아이템이 나올 수 있음
+
+                    dateCreator.createDateFlowable(
                         10,
                         1,
                         todoList,
-                        dataList.findLast { it.type == DailyAdapter.DATE }!!.content as Date
+                        adapter.dataList.findLast { it.type == DailyAdapter.DATE }!!.content as Date
                     ).observeOn(AndroidSchedulers.mainThread())
                         .subscribe {
-                            dataList.add(it)
-                            recyclerView.adapter!!.notifyItemInserted(dataList.size - 1)
+                            adapter.addItem(it, adapter.itemCount)
                         }.apply { disposables.add(this) }
                 }
             }
@@ -102,8 +104,11 @@ class DailyCalendarFragment : Fragment() {
                 null,
                 null
             )
-        ).filter { it.moveToNext() }
-            .doAfterNext { if (it.isLast) it.close() }
+        ).filter {
+            Log.d(TAG, "${it.count}")
+            it.moveToNext()
+        }
+//            .doAfterNext { if (it.isAfterLast) it.close() }
             .map {
                 CalendarData(
                     it.getLong(0),
@@ -137,6 +142,7 @@ class DailyCalendarFragment : Fragment() {
 
 
     fun insertList(calendarData: CalendarData) {
+        val dataList = adapter.dataList
         val indices =
             dataList.filter { it.type == DailyAdapter.DATE && (it.content as Date).time >= calendarData.startDate.time && (it.content).time < calendarData.endDate.time + 86400000L }
                 .map { dataList.indexOf(it) }
@@ -157,6 +163,7 @@ class DailyCalendarFragment : Fragment() {
     }
 
     fun deleteList(id: Long) {
+        val dataList = adapter.dataList
         dataList.forEach {
             if (it.type == DailyAdapter.DATE) {
                 val rm = it.invisibleChildren!!.find { calendarData -> calendarData.id == id }

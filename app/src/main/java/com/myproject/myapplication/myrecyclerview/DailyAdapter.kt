@@ -19,7 +19,7 @@ import kotlinx.android.synthetic.main.recyclerview_item_daily_todo.view.*
 import java.sql.Date
 
 class DailyAdapter(
-    private val dataList: ArrayList<Item>,
+    val dataList: ArrayList<Item>,
     private val fragment: Fragment
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -90,6 +90,8 @@ class DailyAdapter(
             }
         }
     }
+
+
 
     fun addItem(item:Item, position:Int){
         dataList.add(position, item)

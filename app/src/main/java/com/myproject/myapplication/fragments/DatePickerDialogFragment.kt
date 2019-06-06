@@ -13,7 +13,7 @@ class DatePickerDialogFragment : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val date = arguments?.getSerializable("date") as Date?
-        val c = GregorianCalendar.getInstance(TimeZone.getTimeZone("Asia/Seoul"))
+        val c = GregorianCalendar.getInstance()
         if (date != null) {
             c.time = date
         }

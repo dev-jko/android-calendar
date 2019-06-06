@@ -24,14 +24,14 @@ class DateCreatorTest {
 
     @Test
     fun `test current date`() {
-        val dataList = dateCreator.createDate(1, 0).toList().blockingGet()
+        val dataList = dateCreator.createDateFlowable(1, 0).toList().blockingGet()
         val result = dataList[0].content as Date
         assertEquals(result, gc.time)
     }
 
     @Test
     fun `test midnight`() {
-        val dataList = dateCreator.createDate(1, 0).toList().blockingGet()
+        val dataList = dateCreator.createDateFlowable(1, 0).toList().blockingGet()
         val result = dataList[0].content as Date
         assertEquals(result, gc.time)
     }
@@ -39,7 +39,7 @@ class DateCreatorTest {
     @Test
     fun `test order`() {
         val testSize = 200
-        val dataList = dateCreator.createDate(testSize, 0).toList().blockingGet()
+        val dataList = dateCreator.createDateFlowable(testSize, 0).toList().blockingGet()
         gc.add(Calendar.DATE, -1)
         val expected: List<Date> = List<Date>(testSize) {
             gc.add(Calendar.DATE, 1)
@@ -54,7 +54,7 @@ class DateCreatorTest {
     @Test
     fun `test plus offset`() {
         val offset = 5
-        val data = dateCreator.createDate(1, offset).toList().blockingGet()
+        val data = dateCreator.createDateFlowable(1, offset).toList().blockingGet()
         val result = data[0].content as Date
         gc.add(Calendar.DATE, offset)
         assertEquals(result, gc.time)
@@ -63,7 +63,7 @@ class DateCreatorTest {
     @Test
     fun `test minus offset`() {
         val offset = -4
-        val data = dateCreator.createDate(1, offset).toList().blockingGet()
+        val data = dateCreator.createDateFlowable(1, offset).toList().blockingGet()
         val result = data[0].content as Date
         gc.add(Calendar.DATE, offset)
         assertEquals(result, gc.time)
