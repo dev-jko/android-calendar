@@ -5,21 +5,21 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
+import com.jakewharton.rxbinding2.support.v7.widget.RxRecyclerView
 import com.myproject.myapplication.*
 import com.myproject.myapplication.myrecyclerview.DailyAdapter
 import io.reactivex.Flowable
-import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_daily_calendar.*
 import java.sql.Date
+import java.util.concurrent.TimeUnit
 
 
 class DailyCalendarFragment : Fragment() {
@@ -54,42 +54,44 @@ class DailyCalendarFragment : Fragment() {
         recycler_daily.adapter = adapter
 
 
-
-
-        recycler_daily.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
-
-                if (!recyclerView.canScrollVertically(-1)) {
-                    var count = 0
-                    val todoList = getDataFlowable().toList().blockingGet()
-
-                    Log.d(TAG, "$todoList, ${todoList.size}")
-
-                    dateCreator.createDateFlowable(10, -10, todoList, adapter.dataList[0].content as Date)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe {
-                            adapter.addItem(it, count++)
-                        }.apply { disposables.add(this) }
-                } else if (!recyclerView.canScrollVertically(1)) {
-                    val todoList = getDataFlowable().toList().blockingGet()
-
-                    Log.d(TAG, "$todoList, ${todoList.size}")
-
-                    // TODO 스크롤을 빨리할 경우, 이벤트가 여러번 실행되어 중복된 아이템이 나올 수 있음
-
-                    dateCreator.createDateFlowable(
-                        10,
-                        1,
-                        todoList,
-                        adapter.dataList.findLast { it.type == DailyAdapter.DATE }!!.content as Date
-                    ).observeOn(AndroidSchedulers.mainThread())
-                        .subscribe {
-                            adapter.addItem(it, adapter.itemCount)
-                        }.apply { disposables.add(this) }
+        // 스크롤을 빨리할 경우, 이벤트가 여러번 실행되어 중복된 아이템이 나올 수 있음
+        // TODO 수정함 테스트 필요
+        RxRecyclerView.scrollStateChanges(recycler_daily)
+            .map {
+                when {
+                    !recycler_daily.canScrollVertically(-1) -> 0
+                    !recycler_daily.canScrollVertically(1) -> 1
+                    else -> 2
                 }
             }
-        })
+            .filter { it != 2 }
+            .debounce(300L, TimeUnit.MILLISECONDS)
+            .subscribe {
+                val todoList = getDataFlowable().toList().blockingGet()
+                if (it == 0) addItemInFront(todoList)
+                else addItemToBack(todoList)
+            }
+            .apply { disposables.add(this) }
+
+    }
+
+    private fun addItemToBack(todoList: MutableList<CalendarData>) {
+        dateCreator.createDateFlowable(
+            10,
+            1,
+            todoList,
+            adapter.dataList.findLast { it.type == DailyAdapter.DATE }!!.content as Date
+        ).observeOn(AndroidSchedulers.mainThread())
+            .subscribe { adapter.addItem(it, adapter.itemCount) }
+            .apply { disposables.add(this) }
+    }
+
+    private fun addItemInFront(todoList: MutableList<CalendarData>) {
+        var count = 0
+        dateCreator.createDateFlowable(10, -10, todoList, adapter.dataList[0].content as Date)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { adapter.addItem(it, count++) }
+            .apply { disposables.add(this) }
     }
 
     fun getDataFlowable(): Flowable<CalendarData> {
@@ -107,16 +109,14 @@ class DailyCalendarFragment : Fragment() {
         ).filter {
             Log.d(TAG, "${it.count}")
             it.moveToNext()
-        }
-//            .doAfterNext { if (it.isAfterLast) it.close() }
-            .map {
-                CalendarData(
-                    it.getLong(0),
-                    Date(it.getLong(1)),
-                    Date(it.getLong(2)),
-                    it.getString(3)
-                )
-            }.subscribeOn(Schedulers.io())
+        }.map {
+            CalendarData(
+                it.getLong(0),
+                Date(it.getLong(1)),
+                Date(it.getLong(2)),
+                it.getString(3)
+            )
+        }.subscribeOn(Schedulers.io())
     }
 
     fun deleteData(id: Long): Int {
