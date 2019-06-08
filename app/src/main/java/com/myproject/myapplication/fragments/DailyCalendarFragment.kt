@@ -144,7 +144,10 @@ class DailyCalendarFragment : Fragment() {
     fun insertList(calendarData: CalendarData) {
         val dataList = adapter.dataList
         val indices =
-            dataList.filter { it.type == DailyAdapter.DATE && (it.content as Date).time >= calendarData.startDate.time && (it.content).time < calendarData.endDate.time + 86400000L }
+            dataList.filter {
+                it.type == DailyAdapter.DATE && (it.content as Date).time >= calendarData.startDate.time
+                        && (it.content).time < calendarData.endDate.time + 86400000L
+            }
                 .map { dataList.indexOf(it) }
         var count = 0
         indices.forEach {

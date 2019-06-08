@@ -5,13 +5,15 @@ import android.content.ContentValues
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.widget.DatePicker
 import android.widget.Toast
+import com.jakewharton.rxbinding2.view.RxView
 import com.myproject.myapplication.fragments.DatePickerDialogFragment
+import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_todo_editing.*
 import java.sql.Date
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 class TodoEditingActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
@@ -19,6 +21,7 @@ class TodoEditingActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListe
     lateinit var startDate: Date
     lateinit var endDate: Date
     var datePickerFlag = 0
+    val disposables: CompositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,24 +33,23 @@ class TodoEditingActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListe
         text_view_todo_editing_start_date.text = startDate.toString()
         text_view_todo_editing_end_date.text = endDate.toString()
 
+        RxView.clicks(linear_layout_todo_editing_start)
+            .map { Bundle().apply { putSerializable("date", startDate) } }
+            .map { DatePickerDialogFragment().apply { arguments = it } }
+            .subscribe {
+                datePickerFlag = 0
+                it.show(this.supportFragmentManager, "startDatePicker")
+            }
+            .apply { disposables.add(this) }
 
-        linear_layout_todo_editing_start.setOnClickListener {
-            val dialog = DatePickerDialogFragment()
-            val bundle = Bundle()
-            bundle.putSerializable("date", startDate)
-            dialog.arguments = bundle
-            datePickerFlag = 0
-            dialog.show(this.supportFragmentManager, "startDatePicker")
-        }
-
-        linear_layout_todo_editing_end.setOnClickListener {
-            val dialog = DatePickerDialogFragment()
-            val bundle = Bundle()
-            bundle.putSerializable("date", endDate)
-            dialog.arguments = bundle
-            datePickerFlag = 1
-            dialog.show(this.supportFragmentManager, "endDatePicker")
-        }
+        RxView.clicks(linear_layout_todo_editing_end)
+            .map { Bundle().apply { putSerializable("date", endDate) } }
+            .map { DatePickerDialogFragment().apply { arguments = it } }
+            .subscribe {
+                datePickerFlag = 1
+                it.show(this.supportFragmentManager, "endDatePicker")
+            }
+            .apply { disposables.add(this) }
 
         btn_todo_editing_save.setOnClickListener {
             val db = DataBaseOpenHelper(this).writableDatabase
@@ -60,23 +62,22 @@ class TodoEditingActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListe
             db.close()
             if (result == -1L) {
                 Toast.makeText(this, "오류가 발생했습니다. 다시 저장해주세요.", Toast.LENGTH_LONG).show()
-            } else {
-                Toast.makeText(this, "일정이 저장되었습니다.", Toast.LENGTH_LONG).show()
-                val intent = Intent()
-                intent.putExtra("id", result)
-                intent.putExtra("startDate", startDate)
-                intent.putExtra("endDate", endDate)
-                intent.putExtra("content", edit_text_todo_editing_content.text.toString())
-                setResult(50, intent)
-                finish()
+                return@setOnClickListener
             }
+            Toast.makeText(this, "일정이 저장되었습니다.", Toast.LENGTH_LONG).show()
+            val intent = Intent()
+            intent.putExtra("id", result)
+            intent.putExtra("startDate", startDate)
+            intent.putExtra("endDate", endDate)
+            intent.putExtra("content", edit_text_todo_editing_content.text.toString())
+            setResult(50, intent)
+            finish()
         }
 
-        btn_todo_editing_cancel.setOnClickListener {
-            onBackPressed()
-        }
-
-
+        RxView.clicks(btn_todo_editing_cancel)
+            .debounce(400, TimeUnit.MILLISECONDS)
+            .subscribe { onBackPressed() }
+            .apply { disposables.add(this) }
     }
 
     override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
@@ -85,10 +86,10 @@ class TodoEditingActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListe
         if (datePickerFlag == 0) {
             startDate = Date(c.time.time)
             text_view_todo_editing_start_date.text = startDate.toString()
-        } else {
-            endDate = Date(c.time.time)
-            text_view_todo_editing_end_date.text = endDate.toString()
+            return
         }
+        endDate = Date(c.time.time)
+        text_view_todo_editing_end_date.text = endDate.toString()
     }
 
 
