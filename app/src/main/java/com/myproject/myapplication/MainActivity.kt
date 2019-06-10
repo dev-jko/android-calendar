@@ -1,25 +1,22 @@
 package com.myproject.myapplication
 
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentStatePagerAdapter
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
-import android.view.View
-import android.widget.Toast
+import com.jakewharton.rxbinding2.view.RxView
 import com.myproject.myapplication.fragments.DailyCalendarFragment
 import com.myproject.myapplication.fragments.MonthlyCalendarFragment
 import com.myproject.myapplication.fragments.WeeklyCalendarFragment
+import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
-import java.sql.Date
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var dbHelper: DataBaseOpenHelper
+    private val disposables = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,17 +27,17 @@ class MainActivity : AppCompatActivity() {
         pager.adapter = MyPagerAdapter(supportFragmentManager)
         pager.currentItem = this.getSharedPreferences("settings", Context.MODE_PRIVATE).getInt("pagerItem", 0)
 
-        val movePageListener: View.OnClickListener = View.OnClickListener {
-            val tag: Int = it.tag as Int
-            pager.currentItem = tag
-        }
+        RxView.clicks(btn_monthly_tab)
+            .subscribe { pager.currentItem = 0 }
+            .apply { disposables.add(this) }
 
-        btn_monthly_tab.setOnClickListener(movePageListener)
-        btn_monthly_tab.tag = 0
-        btn_daily_tab.setOnClickListener(movePageListener)
-        btn_daily_tab.tag = 1
-        btn_weekly_tab.setOnClickListener(movePageListener)
-        btn_weekly_tab.tag = 2
+        RxView.clicks(btn_daily_tab)
+            .subscribe { pager.currentItem = 1 }
+            .apply { disposables.add(this) }
+
+        RxView.clicks(btn_weekly_tab)
+            .subscribe { pager.currentItem = 2 }
+            .apply { disposables.add(this) }
     }
 
     override fun onPause() {
@@ -65,4 +62,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun isDestroyed(): Boolean {
+        disposables.clear()
+        return super.isDestroyed()
+    }
 }
