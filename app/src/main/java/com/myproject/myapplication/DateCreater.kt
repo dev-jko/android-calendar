@@ -1,13 +1,10 @@
 package com.myproject.myapplication
 
-import android.util.Log
 import com.myproject.myapplication.myrecyclerview.DailyAdapter
 import io.reactivex.Flowable
-import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import java.sql.Date
 import java.util.*
-import kotlin.collections.ArrayList
 
 class DateCreator {
 
@@ -34,10 +31,9 @@ class DateCreator {
                 DailyAdapter.Item(
                     DailyAdapter.DATE,
                     date,
-
-                    // TODO 날짜 시간 맞추기
                     todoList.filter {
-                        !((it.startDate.time >= date.time + 86400000L) || (date.time > it.endDate.time))
+                        date.time + 86400000L > it.startDate.time
+                                && date.time <= it.endDate.time
                     } as ArrayList<CalendarData>
                 )
             }.subscribeOn(Schedulers.computation())

@@ -18,15 +18,14 @@ import kotlinx.android.synthetic.main.recyclerview_item_daily.view.*
 import kotlinx.android.synthetic.main.recyclerview_item_daily_todo.view.*
 import java.sql.Date
 
-class DailyAdapter(
-    val dataList: ArrayList<Item>,
-    private val fragment: Fragment
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class DailyAdapter(private val fragment: Fragment) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         const val DATE = 0
         const val TODO = 1
     }
+
+    val dataList: ArrayList<Item> = ArrayList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val context = parent.context
@@ -92,8 +91,7 @@ class DailyAdapter(
     }
 
 
-
-    fun addItem(item:Item, position:Int){
+    fun addItem(item: Item, position: Int) {
         dataList.add(position, item)
         notifyItemInserted(position)
     }

@@ -21,7 +21,7 @@ class TodoEditingActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListe
     lateinit var startDate: Date
     lateinit var endDate: Date
     var datePickerFlag = 0
-    val disposables: CompositeDisposable = CompositeDisposable()
+    private val disposables: CompositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,7 +64,7 @@ class TodoEditingActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListe
                 Toast.makeText(this, "오류가 발생했습니다. 다시 저장해주세요.", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
-            Toast.makeText(this, "일정이 저장되었습니다.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "일정이 저장되었습니다. $result", Toast.LENGTH_LONG).show()
             val intent = Intent()
             intent.putExtra("id", result)
             intent.putExtra("startDate", startDate)

@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,20 +41,18 @@ class DailyCalendarFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        val todoList = getDataFlowable().toList().blockingGet()
-        val dataList = ArrayList<DailyAdapter.Item>()
-        dateCreator.createDateFlowable(15, -3, todoList)
-            .subscribe { dataList.add(it) }
-            .apply { disposables.add(this) }
-
         recycler_daily.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         recycler_daily.layoutManager = LinearLayoutManager(activity)
-        adapter = DailyAdapter(dataList, this)
+        adapter = DailyAdapter(this)
         recycler_daily.adapter = adapter
+        val todoList = getDataFlowable()
+            .toList()
+            .blockingGet()
+        dateCreator.createDateFlowable(15, -3, todoList)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { adapter.addItem(it, adapter.itemCount) }
+            .apply { disposables.add(this) }
 
-
-        // 스크롤을 빨리할 경우, 이벤트가 여러번 실행되어 중복된 아이템이 나올 수 있음
-        // TODO 수정함 테스트 필요
         RxRecyclerView.scrollStateChanges(recycler_daily)
             .map {
                 when {
@@ -96,27 +93,27 @@ class DailyCalendarFragment : Fragment() {
 
     fun getDataFlowable(): Flowable<CalendarData> {
         val db = (activity as MainActivity).dbHelper.readableDatabase
-        return Flowable.just(
-            db.query(
-                CalendarDBContract.TABLE_NAME,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+        return Flowable.fromIterable(
+            IterableCursor(
+                db.query(
+                    CalendarDBContract.TABLE_NAME,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                )
             )
-        ).filter {
-            Log.d(TAG, "${it.count}")
-            it.moveToNext()
-        }.map {
-            CalendarData(
-                it.getLong(0),
-                Date(it.getLong(1)),
-                Date(it.getLong(2)),
-                it.getString(3)
-            )
-        }.subscribeOn(Schedulers.io())
+        )
+            .map {
+                CalendarData(
+                    it.getLong(0),
+                    Date(it.getLong(1)),
+                    Date(it.getLong(2)),
+                    it.getString(3)
+                )
+            }.subscribeOn(Schedulers.io())
     }
 
     fun deleteData(id: Long): Int {
@@ -145,8 +142,9 @@ class DailyCalendarFragment : Fragment() {
         val dataList = adapter.dataList
         val indices =
             dataList.filter {
-                it.type == DailyAdapter.DATE && (it.content as Date).time >= calendarData.startDate.time
-                        && (it.content).time < calendarData.endDate.time + 86400000L
+                (it.type == DailyAdapter.DATE)
+                        && (it.content as Date).time + 86400000L > calendarData.startDate.time
+                        && (it.content).time <= calendarData.endDate.time
             }
                 .map { dataList.indexOf(it) }
         var count = 0
