@@ -16,10 +16,7 @@ class DateCreator {
     ): Flowable<DailyAdapter.Item> {
         val gregorianCalendar = GregorianCalendar()
         if (startDate == null) {
-            gregorianCalendar.add(Calendar.HOUR_OF_DAY, -gregorianCalendar.get(Calendar.HOUR_OF_DAY))
-            gregorianCalendar.add(Calendar.MINUTE, -gregorianCalendar.get(Calendar.MINUTE))
-            gregorianCalendar.add(Calendar.SECOND, -gregorianCalendar.get(Calendar.SECOND))
-            gregorianCalendar.add(Calendar.MILLISECOND, -gregorianCalendar.get(Calendar.MILLISECOND))
+            setTimeMidnight(gregorianCalendar)
         } else {
             gregorianCalendar.time = startDate
         }
@@ -37,6 +34,13 @@ class DateCreator {
                     } as ArrayList<CalendarData>
                 )
             }.subscribeOn(Schedulers.computation())
+    }
+
+    private fun setTimeMidnight(gregorianCalendar: GregorianCalendar) {
+        gregorianCalendar.add(Calendar.HOUR_OF_DAY, -gregorianCalendar.get(Calendar.HOUR_OF_DAY))
+        gregorianCalendar.add(Calendar.MINUTE, -gregorianCalendar.get(Calendar.MINUTE))
+        gregorianCalendar.add(Calendar.SECOND, -gregorianCalendar.get(Calendar.SECOND))
+        gregorianCalendar.add(Calendar.MILLISECOND, -gregorianCalendar.get(Calendar.MILLISECOND))
     }
 
 }

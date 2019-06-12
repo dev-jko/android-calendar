@@ -51,42 +51,60 @@ class DailyAdapter(private val fragment: Fragment) : RecyclerView.Adapter<Recycl
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = dataList[position]
         if (item.type == DATE) {
-            val dateHolder = holder as DateViewHolder
-            dateHolder.dateTextView.text = item.content.toString()
-            dateHolder.dateTextView.setOnClickListener {
-                if (item.invisibleChildren!!.size == 0) {
-                    val pos = dataList.indexOf(item)
-                    var count = 0
-                    while (dataList.size > pos + 1 && dataList[pos + 1].type == TODO) {
-                        item.invisibleChildren.add(dataList.removeAt(pos + 1).content as CalendarData)
-                        count++
-                    }
-                    notifyItemRangeRemoved(pos + 1, count)
-                } else {
-                    val pos = dataList.indexOf(item)
-                    var index = pos + 1
-                    item.invisibleChildren.forEach { dataList.add(index++, Item(TODO, it)) }
-                    notifyItemRangeInserted(pos + 1, index - pos - 1)
-                    item.invisibleChildren.clear()
-                }
-            }
-            dateHolder.todoAddBtn.setOnClickListener {
-                val intent = Intent(fragment.context, TodoEditingActivity::class.java)
-                intent.putExtra("startDate", item.content as Date)
-                intent.putExtra("endDate", item.content)
-                fragment.startActivityForResult(intent, 50)
-            }
+            bindDateHolder(holder, item, item.invisibleChildren!!, item.content as Date)
         } else {
-            val todoHolder = holder as TodoViewHolder
-            todoHolder.todoTextView.text = (item.content as CalendarData).content
-            todoHolder.todoDeleteBtn.setOnClickListener {
-                if ((fragment as DailyCalendarFragment).deleteData(item.content.id) == 1) {
-                    fragment.deleteList(item.content.id)
-                    Toast.makeText(fragment.context, "삭제 완료", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(fragment.context, "삭제 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
-                }
+            bindTodoHolder(holder, item, item.content as CalendarData, fragment as DailyCalendarFragment)
+        }
+    }
+
+    private fun bindTodoHolder(
+        holder: RecyclerView.ViewHolder,
+        item: Item,
+        content: CalendarData,
+        fragment: DailyCalendarFragment
+    ) {
+        val todoHolder = holder as TodoViewHolder
+        todoHolder.todoTextView.text = (item.content as CalendarData).content
+        todoHolder.todoDeleteBtn.setOnClickListener {
+            if (fragment.deleteData(content.id) == 1) {
+                fragment.deleteList(content.id)
+                Toast.makeText(fragment.context, "삭제 완료", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(fragment.context, "삭제 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun bindDateHolder(
+        holder: RecyclerView.ViewHolder,
+        item: Item,
+        invisibleChildren: ArrayList<CalendarData>,
+        content: Date
+    ) {
+        val dateHolder = holder as DateViewHolder
+        dateHolder.dateTextView.text = item.content.toString()
+        dateHolder.dateTextView.setOnClickListener {
+            if (item.invisibleChildren!!.size == 0) {
+                val pos = dataList.indexOf(item)
+                var count = 0
+                while (dataList.size > pos + 1 && dataList[pos + 1].type == TODO) {
+                    invisibleChildren.add(dataList.removeAt(pos + 1).content as CalendarData)
+                    count++
+                }
+                notifyItemRangeRemoved(pos + 1, count)
+            } else {
+                val pos = dataList.indexOf(item)
+                var index = pos + 1
+                invisibleChildren.forEach { dataList.add(index++, Item(TODO, it)) }
+                notifyItemRangeInserted(pos + 1, index - pos - 1)
+                invisibleChildren.clear()
+            }
+        }
+        dateHolder.todoAddBtn.setOnClickListener {
+            val intent = Intent(fragment.context, TodoEditingActivity::class.java)
+            intent.putExtra("startDate", item.content as Date)
+            intent.putExtra("endDate", content)
+            fragment.startActivityForResult(intent, 50)
         }
     }
 
