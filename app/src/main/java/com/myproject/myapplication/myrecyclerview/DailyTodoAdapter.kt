@@ -1,7 +1,7 @@
 package com.myproject.myapplication.myrecyclerview
 
 import android.content.Context
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,7 +10,7 @@ import com.myproject.myapplication.CalendarData
 import com.myproject.myapplication.R
 
 
-class DailyTodoAdapter(val mData: ArrayList<CalendarData>) : RecyclerView.Adapter<DailyTodoAdapter.ViewHolder>() {
+class DailyTodoAdapter(val mData: ArrayList<CalendarData>) : androidx.recyclerview.widget.RecyclerView.Adapter<DailyTodoAdapter.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val context = parent.context
         val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -27,7 +27,7 @@ class DailyTodoAdapter(val mData: ArrayList<CalendarData>) : RecyclerView.Adapte
         holder.contentTextView.text = mData[position].content
     }
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class ViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
         val contentTextView: TextView = itemView.findViewById(R.id.daily_todo_text_view)
     }
 }

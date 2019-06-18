@@ -1,9 +1,7 @@
-package com.myproject.myapplication.myrecyclerview
+package com.myproject.myapplication.dailyCalendar
 
 import android.content.Context
 import android.content.Intent
-import android.support.v4.app.Fragment
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,12 +11,11 @@ import android.widget.Toast
 import com.myproject.myapplication.CalendarData
 import com.myproject.myapplication.R
 import com.myproject.myapplication.TodoEditingActivity
-import com.myproject.myapplication.fragments.DailyCalendarFragment
 import kotlinx.android.synthetic.main.recyclerview_item_daily.view.*
 import kotlinx.android.synthetic.main.recyclerview_item_daily_todo.view.*
 import java.sql.Date
 
-class DailyAdapter(private val fragment: Fragment) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class DailyAdapter(private val fragment: androidx.fragment.app.Fragment) : androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
 
     companion object {
         const val DATE = 0
@@ -27,7 +24,7 @@ class DailyAdapter(private val fragment: Fragment) : RecyclerView.Adapter<Recycl
 
     val dataList: ArrayList<Item> = ArrayList()
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder {
         val context = parent.context
         val inflater: LayoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val view: View
@@ -48,7 +45,7 @@ class DailyAdapter(private val fragment: Fragment) : RecyclerView.Adapter<Recycl
         return dataList[position].type
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
         val item = dataList[position]
         if (item.type == DATE) {
             bindDateHolder(holder, item, item.invisibleChildren!!, item.content as Date)
@@ -58,7 +55,7 @@ class DailyAdapter(private val fragment: Fragment) : RecyclerView.Adapter<Recycl
     }
 
     private fun bindTodoHolder(
-        holder: RecyclerView.ViewHolder,
+        holder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
         item: Item,
         content: CalendarData,
         fragment: DailyCalendarFragment
@@ -76,7 +73,7 @@ class DailyAdapter(private val fragment: Fragment) : RecyclerView.Adapter<Recycl
     }
 
     private fun bindDateHolder(
-        holder: RecyclerView.ViewHolder,
+        holder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
         item: Item,
         invisibleChildren: ArrayList<CalendarData>,
         content: Date
@@ -95,7 +92,12 @@ class DailyAdapter(private val fragment: Fragment) : RecyclerView.Adapter<Recycl
             } else {
                 val pos = dataList.indexOf(item)
                 var index = pos + 1
-                invisibleChildren.forEach { dataList.add(index++, Item(TODO, it)) }
+                invisibleChildren.forEach { dataList.add(index++,
+                    Item(
+                        TODO,
+                        it
+                    )
+                ) }
                 notifyItemRangeInserted(pos + 1, index - pos - 1)
                 invisibleChildren.clear()
             }
@@ -114,12 +116,12 @@ class DailyAdapter(private val fragment: Fragment) : RecyclerView.Adapter<Recycl
         notifyItemInserted(position)
     }
 
-    class DateViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class DateViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
         val dateTextView: TextView = itemView.daily_item_date_text_view
         val todoAddBtn: Button = itemView.btn_daily_todo_add
     }
 
-    class TodoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class TodoViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
         val todoTextView: TextView = itemView.daily_todo_text_view
         val todoDeleteBtn: Button = itemView.btn_daily_todo_delete
     }

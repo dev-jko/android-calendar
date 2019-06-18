@@ -3,13 +3,13 @@ package com.myproject.myapplication.fragments
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
+import androidx.fragment.app.DialogFragment
 import com.myproject.myapplication.TodoEditingActivity
 import java.sql.Date
 import java.util.*
 
 
-class DatePickerDialogFragment : DialogFragment() {
+class DatePickerDialogFragment : androidx.fragment.app.DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val date = arguments?.getSerializable("date") as Date?

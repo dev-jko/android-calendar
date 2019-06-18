@@ -1,17 +1,16 @@
-package com.myproject.myapplication.fragments
+package com.myproject.myapplication.dailyCalendar
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v7.widget.DividerItemDecoration
-import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.RelativeLayout
+import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.ViewModelProviders
 import com.jakewharton.rxbinding2.support.v7.widget.RxRecyclerView
 import com.myproject.myapplication.*
-import com.myproject.myapplication.myrecyclerview.DailyAdapter
+import com.myproject.myapplication.databinding.FragmentDailyCalendarBinding
+import com.myproject.myapplication.main.MainActivity
 import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -21,10 +20,14 @@ import java.sql.Date
 import java.util.concurrent.TimeUnit
 
 
-class DailyCalendarFragment : Fragment() {
+class DailyCalendarFragment : androidx.fragment.app.Fragment() {
 
     companion object {
         private val TAG: String? = DailyCalendarFragment::class.simpleName
+    }
+
+    private val viewModel: DailyCalendarViewModel by lazy {
+        ViewModelProviders.of(this).get(DailyCalendarViewModel::class.java)
     }
 
     lateinit var adapter: DailyAdapter
@@ -35,14 +38,24 @@ class DailyCalendarFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_daily_calendar, container, false) as RelativeLayout
+        val binding: FragmentDailyCalendarBinding =
+            DataBindingUtil.inflate(inflater, R.layout.fragment_daily_calendar, container, false)
+        binding.lifecycleOwner = this
+        binding.vm = viewModel
+        return binding.root
+//        return inflater.inflate(R.layout.fragment_daily_calendar, container, false) as RelativeLayout
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        recycler_daily.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
-        recycler_daily.layoutManager = LinearLayoutManager(activity)
+        recycler_daily.addItemDecoration(
+            androidx.recyclerview.widget.DividerItemDecoration(
+                context,
+                androidx.recyclerview.widget.DividerItemDecoration.VERTICAL
+            )
+        )
+        recycler_daily.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(activity)
         adapter = DailyAdapter(this)
         recycler_daily.adapter = adapter
         val todoList = getDataFlowable()

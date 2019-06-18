@@ -1,6 +1,6 @@
 package com.myproject.myapplication
 
-import com.myproject.myapplication.myrecyclerview.DailyAdapter
+import com.myproject.myapplication.dailyCalendar.DailyAdapter
 import io.reactivex.Flowable
 import io.reactivex.schedulers.Schedulers
 import java.sql.Date
