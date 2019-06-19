@@ -1,4 +1,4 @@
-package com.myproject.myapplication
+package com.myproject.myapplication.Repository
 
 object CalendarDBContract {
     const val TABLE_NAME = "Calendar"

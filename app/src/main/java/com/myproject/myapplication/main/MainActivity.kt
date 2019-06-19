@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProviders
-import com.myproject.myapplication.DataBaseOpenHelper
 import com.myproject.myapplication.R
 import com.myproject.myapplication.dailyCalendar.DailyCalendarFragment
 import com.myproject.myapplication.fragments.MonthlyCalendarFragment
@@ -14,7 +13,7 @@ import com.myproject.myapplication.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var dbHelper: DataBaseOpenHelper
+
 
     private val viewModel: MainViewModel by lazy {
         ViewModelProviders.of(this).get(MainViewModel::class.java)
@@ -28,8 +27,6 @@ class MainActivity : AppCompatActivity() {
         binding.vm = viewModel
 
         pager.adapter = MyPagerAdapter(supportFragmentManager)
-
-        dbHelper = DataBaseOpenHelper(this)
     }
 
     override fun onResume() {

@@ -8,13 +8,13 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProviders
 import com.jakewharton.rxbinding2.support.v7.widget.RxRecyclerView
-import com.myproject.myapplication.*
+import com.myproject.myapplication.R
+import com.myproject.myapplication.Repository.CalendarData
+import com.myproject.myapplication.Repository.DataBaseOpenHelper
+import com.myproject.myapplication.Repository.DateCreator
 import com.myproject.myapplication.databinding.FragmentDailyCalendarBinding
-import com.myproject.myapplication.main.MainActivity
-import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_daily_calendar.*
 import java.sql.Date
 import java.util.concurrent.TimeUnit
@@ -30,20 +30,23 @@ class DailyCalendarFragment : androidx.fragment.app.Fragment() {
         ViewModelProviders.of(this).get(DailyCalendarViewModel::class.java)
     }
 
-    lateinit var adapter: DailyAdapter
     val disposables = CompositeDisposable()
-    private val dateCreator = DateCreator()
+    lateinit var dbHelper: DataBaseOpenHelper
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
+        dbHelper = DataBaseOpenHelper(context!!)
+
         val binding: FragmentDailyCalendarBinding =
             DataBindingUtil.inflate(inflater, R.layout.fragment_daily_calendar, container, false)
         binding.lifecycleOwner = this
         binding.vm = viewModel
+
         return binding.root
-//        return inflater.inflate(R.layout.fragment_daily_calendar, container, false) as RelativeLayout
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -55,16 +58,7 @@ class DailyCalendarFragment : androidx.fragment.app.Fragment() {
                 androidx.recyclerview.widget.DividerItemDecoration.VERTICAL
             )
         )
-        recycler_daily.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(activity)
-        adapter = DailyAdapter(this)
-        recycler_daily.adapter = adapter
-        val todoList = getDataFlowable()
-            .toList()
-            .blockingGet()
-        dateCreator.createDateFlowable(15, -3, todoList)
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { adapter.addItem(it, adapter.itemCount) }
-            .apply { disposables.add(this) }
+
 
         RxRecyclerView.scrollStateChanges(recycler_daily)
             .map {
@@ -77,7 +71,7 @@ class DailyCalendarFragment : androidx.fragment.app.Fragment() {
             .filter { it != 2 }
             .debounce(300L, TimeUnit.MILLISECONDS)
             .subscribe {
-                val todoList = getDataFlowable().toList().blockingGet()
+                val todoList = viewModel.getDataFlowable().toList().blockingGet()
                 if (it == 0) addItemInFront(todoList)
                 else addItemToBack(todoList)
             }
@@ -86,54 +80,22 @@ class DailyCalendarFragment : androidx.fragment.app.Fragment() {
     }
 
     private fun addItemToBack(todoList: MutableList<CalendarData>) {
-        dateCreator.createDateFlowable(
+        DateCreator.createDateFlowable(
             10,
             1,
             todoList,
-            adapter.dataList.findLast { it.type == DailyAdapter.DATE }!!.content as Date
+            viewModel.adapter!!.dataList.findLast { it.type == DailyAdapter.DATE }!!.content as Date
         ).observeOn(AndroidSchedulers.mainThread())
-            .subscribe { adapter.addItem(it, adapter.itemCount) }
+            .subscribe { viewModel.adapter!!.addItem(it, viewModel.adapter!!.itemCount) }
             .apply { disposables.add(this) }
     }
 
     private fun addItemInFront(todoList: MutableList<CalendarData>) {
         var count = 0
-        dateCreator.createDateFlowable(10, -10, todoList, adapter.dataList[0].content as Date)
+        DateCreator.createDateFlowable(10, -10, todoList, viewModel.adapter!!.dataList[0].content as Date)
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { adapter.addItem(it, count++) }
+            .subscribe { viewModel.adapter!!.addItem(it, count++) }
             .apply { disposables.add(this) }
-    }
-
-    fun getDataFlowable(): Flowable<CalendarData> {
-        val db = (activity as MainActivity).dbHelper.readableDatabase
-        return Flowable.fromIterable(
-            IterableCursor(
-                db.query(
-                    CalendarDBContract.TABLE_NAME,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-                )
-            )
-        )
-            .map {
-                CalendarData(
-                    it.getLong(0),
-                    Date(it.getLong(1)),
-                    Date(it.getLong(2)),
-                    it.getString(3)
-                )
-            }.subscribeOn(Schedulers.io())
-    }
-
-    fun deleteData(id: Long): Int {
-        val db = (activity as MainActivity).dbHelper.writableDatabase
-        val selection = "${CalendarDBContract.COLUMN_ID} = ?"
-        val selectionArgs = arrayOf("$id")
-        return db.delete(CalendarDBContract.TABLE_NAME, selection, selectionArgs)
     }
 
 
@@ -152,7 +114,7 @@ class DailyCalendarFragment : androidx.fragment.app.Fragment() {
 
 
     fun insertList(calendarData: CalendarData) {
-        val dataList = adapter.dataList
+        val dataList = viewModel.adapter!!.dataList
         val indices =
             dataList.filter {
                 (it.type == DailyAdapter.DATE)
@@ -177,7 +139,7 @@ class DailyCalendarFragment : androidx.fragment.app.Fragment() {
     }
 
     fun deleteList(id: Long) {
-        val dataList = adapter.dataList
+        val dataList = viewModel.adapter!!.dataList
         dataList.forEach {
             if (it.type == DailyAdapter.DATE) {
                 val rm = it.invisibleChildren!!.find { calendarData -> calendarData.id == id }

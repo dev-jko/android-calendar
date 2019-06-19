@@ -1,4 +1,4 @@
-package com.myproject.myapplication
+package com.myproject.myapplication.Repository
 
 import java.sql.Date
 

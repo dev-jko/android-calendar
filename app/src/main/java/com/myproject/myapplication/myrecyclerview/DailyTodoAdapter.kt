@@ -1,12 +1,11 @@
 package com.myproject.myapplication.myrecyclerview
 
 import android.content.Context
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import com.myproject.myapplication.CalendarData
+import com.myproject.myapplication.Repository.CalendarData
 import com.myproject.myapplication.R
 
 

@@ -1,5 +1,14 @@
 package com.myproject.myapplication.util
 
-import android.view.View
 import androidx.databinding.BindingAdapter
-import androidx.viewpager.widget.ViewPager
+import androidx.recyclerview.widget.RecyclerView
+import com.myproject.myapplication.dailyCalendar.DailyAdapter
+
+@BindingAdapter("replaceAll")
+fun RecyclerView.replaceAll(list: List<DailyAdapter.Item>?) {
+    (this.adapter as DailyAdapter).run {
+        replaceAll(list)
+        notifyDataSetChanged()
+    }
+
+}

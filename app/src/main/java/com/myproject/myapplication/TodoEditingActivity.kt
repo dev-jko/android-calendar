@@ -8,6 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.widget.DatePicker
 import android.widget.Toast
 import com.jakewharton.rxbinding2.view.RxView
+import com.myproject.myapplication.Repository.CalendarDBContract
+import com.myproject.myapplication.Repository.DataBaseOpenHelper
 import com.myproject.myapplication.fragments.DatePickerDialogFragment
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_todo_editing.*
